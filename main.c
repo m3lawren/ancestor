@@ -1,4 +1,5 @@
 #include "batch.h"
+#include "log.h"
 #include "runner.h"
 
 #include <pthread.h>
@@ -9,8 +10,12 @@
 
 int main(void) {
 	pthread_t threads[POOL_SIZE];
-	struct batch* b = batch_create("dummy");
+	struct batch* b;
 	int i, ret;
+
+	log_init(stderr);
+	
+	b = batch_create("dummy");
 
 	for (i = 0; i < POOL_SIZE; i++) {
 		ret = pthread_create(&threads[i], NULL, runner, b);
