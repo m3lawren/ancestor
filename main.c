@@ -1,50 +1,34 @@
+#include "batch.h"
+#include "runner.h"
+
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <curl/curl.h>
 
-#include <assert.h>
-
-#include "jobqueue.h"
-
-size_t header_func(void* ptr, size_t size, size_t nmemb, void* stream) {
-	(void)stream;
-
-	assert(size == 1);
-	
-	fwrite(ptr, size, nmemb, stdout);
-
-	return size * nmemb;
-}
-
-size_t write_func(void* ptr, size_t size, size_t nmemb, void* stream) {
-	(void)ptr;
-	(void)stream;
-	assert(stream == NULL);
-	assert(size == 1);
-	printf("Received %d bytes\n", nmemb);
-	return size * nmemb;
-}
+#define POOL_SIZE 5
 
 int main(void) {
-	CURL* curl;
-	CURLcode res;
+	pthread_t threads[POOL_SIZE];
+	struct batch* b = batch_create("dummy");
+	int i, ret;
 
-	curl = curl_easy_init();
-
-	if (!curl) {
-		fprintf(stderr, "Failed to initialize curl.\n");
-		exit(EXIT_FAILURE);
+	for (i = 0; i < POOL_SIZE; i++) {
+		ret = pthread_create(&threads[i], NULL, runner, b);
+		if (ret != 0) {
+			perror("pthread_create");
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	curl_easy_setopt(curl, CURLOPT_URL, "netinn.xsquared.ca");
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_func);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_func);
-	if ((res = curl_easy_perform(curl))) {
-		fprintf(stderr, "CURL error: %s", curl_easy_strerror(res));
+	for (i = 0; i < POOL_SIZE; i++) {
+		ret = pthread_join(threads[i], NULL);
+		if (ret != 0) {
+			perror("pthread_join");
+			exit(EXIT_FAILURE);
+		}
 	}
-
-	curl_easy_cleanup(curl);
+	
+	batch_decref(b);
 
 	return EXIT_SUCCESS;
 }
