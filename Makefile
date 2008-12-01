@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-g -W -Wall -Werror -ansi -pedantic -MD -Ilibm3/include
+CFLAGS=-g -W -Wall -Werror -ansi -pedantic -MMD -Ilibm3/include
 LDLIBS=-lcurl -lpthread -lm3 
 LDFLAGS=-Llibm3/lib/ $(LDLIBS)
 BINARY=ancest
-OBJS=jobqueue.o main.o
+OBJS=job.o job_parse.o job_request.o jobqueue.o main.o
 DEPS=libm3/lib/libm3.a
 
 $(BINARY): $(OBJS) $(DEPS)

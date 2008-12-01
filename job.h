@@ -2,13 +2,23 @@
 #define _JOB_H_
 
 enum job_type {
-	JOB_PARSE,
-	JOB_REQUEST
+	JT_PARSE,
+	JT_REQUEST
+};
+
+enum job_state {
+	JS_PENDING,
+	JS_RUNNING,
+	JS_COMPLETE
 };
 
 struct job {
-	enum job_type j_type;
-	void* data;
+	enum job_type           j_type;
+	enum job_state volatile j_state;
+	void*                   j_data;
 };
+
+struct job* job_create(enum job_type);
+void        job_destroy(struct job*);
 
 #endif
