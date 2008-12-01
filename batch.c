@@ -1,12 +1,15 @@
 #include "batch.h"
 
 #include "job.h"
+#include "log.h"
 
 #include <assert.h>
 #include <pthread.h>
 #include <queue.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define LOG_TYPE LT_BATCH
 
 struct batch {
 	pthread_mutex_t b_mutex;
@@ -22,8 +25,11 @@ struct batch {
 struct batch* batch_create(const char* name) {
 	struct batch* b = malloc(sizeof(struct batch));
 	int result = 0;
-	
+
+	LOG(LL_DEBUG, "creating new batch '%s'", name);
+
 	if (!b) {
+		LOG(LL_ERROR, "unable to allocate space for struct batch");
 		return NULL;
 	}
 
@@ -32,20 +38,24 @@ struct batch* batch_create(const char* name) {
 	b->b_num_refs = b->b_num_jobs = b->b_job_idx = 0;
 
 	if (!(b->b_name = malloc(strlen(name) + 1))) {
+		LOG(LL_ERROR, "unable to allocate space for b_name");
 		goto failure;
 	}
 
 	strcpy(b->b_name, name);
 
 	if (!(b->b_queue = queue_create())) {
+		LOG(LL_ERROR, "unable to create b_queue");
 		goto failure;
 	}
 
 	if ((result = pthread_mutex_init(&b->b_mutex, NULL))) {
+		LOG(LL_ERROR, "unable to create b_mutex: %s", strerror(result));
 		goto failure;
 	}
 
 	if ((result = pthread_cond_init(&b->b_job_cv, NULL))) {
+		LOG(LL_ERROR, "unable to create b_job_cv: %s", strerror(result));
 		goto failure;
 	}
 
@@ -71,6 +81,8 @@ static void _batch_destroy(struct batch* b) {
 	if (!b) {
 		return;
 	}
+
+	LOG(LL_DEBUG, "destroying batch %s", b->b_name);
 	
 	if (b->b_name) {
 		free(b->b_name);
@@ -90,6 +102,8 @@ static void _batch_destroy(struct batch* b) {
 void batch_incref(struct batch* b) {
 	assert(b);
 
+	LOG(LL_DEBUG, "%p", b);
+
 	assert(0 == pthread_mutex_lock(&b->b_mutex));
 	b->b_num_refs++;
 	assert(0 == pthread_mutex_unlock(&b->b_mutex));
@@ -100,6 +114,8 @@ void batch_decref(struct batch* b) {
 	int can_delete = 0;
 
 	assert(b);
+
+	LOG(LL_DEBUG, "%p", b);
 
 	assert(0 == pthread_mutex_lock(&b->b_mutex));
 	b->b_num_refs--;
@@ -126,10 +142,15 @@ int batch_add_job(struct batch* b, struct job* j) {
 	assert(j);
 	assert(j->j_id == 0);
 
+	LOG(LL_DEBUG, "adding a job to batch %s", b->b_name);
+
 	assert(0 == pthread_mutex_lock(&b->b_mutex));
 	if (!(ret = queue_push(b->b_queue, j))) {
 		b->b_num_jobs++;
 		j->j_id = b->b_job_idx++;
+		LOG(LL_DEBUG, "added job with id %d", j->j_id);
+	} else {
+		LOG(LL_ERROR, "unable to add job: %s", strerror(ret));
 	}
 	pthread_cond_broadcast(&b->b_job_cv);
 	assert(0 == pthread_mutex_unlock(&b->b_mutex));
@@ -151,10 +172,12 @@ struct job* batch_next_job(struct batch* b) {
 
 	assert(0 == pthread_mutex_lock(&b->b_mutex));
 	while (b->b_num_jobs == 0) {
+		LOG(LL_DEBUG, "no jobs, waiting");
 		pthread_cond_wait(&b->b_job_cv, &b->b_mutex);
 	}
 	ret = queue_pop(b->b_queue);
 	b->b_num_jobs--;
+	LOG(LL_DEBUG, "got job %d, %d remaining", ret->j_id, b->b_num_jobs);
 	assert(0 == pthread_mutex_unlock(&b->b_mutex));
 
 	return ret;

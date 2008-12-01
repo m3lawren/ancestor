@@ -18,6 +18,9 @@ enum loglevel {
 };
 
 int  log_init(FILE* stream);
-void log_write(unsigned int type, enum loglevel level, const char* fmt, ...);
+#define log_write(type, level, ...) _log_write(type, level, __func__, __VA_ARGS__)
+void _log_write(unsigned int type, enum loglevel level, const char* func, const char* fmt, ...);
+
+#define LOG(level, ...) log_write(LOG_TYPE, level, __VA_ARGS__)
 
 #endif

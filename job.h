@@ -22,4 +22,6 @@ struct job {
 struct job* job_create(enum job_type);
 void        job_destroy(struct job*);
 
+const char* job_type_string(enum job_type);
+
 #endif
