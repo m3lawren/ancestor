@@ -1,15 +1,24 @@
 CC=gcc
-CFLAGS=`curl-config --cflags` -g -W -Wall -ansi -pedantic -MD
-LDFLAGS=`curl-config --libs`
+CFLAGS=-g -W -Wall -Werror -ansi -pedantic -MD -Ilibm3/include
+LDLIBS=-lcurl -lpthread -lm3 
+LDFLAGS=-Llibm3/lib/ $(LDLIBS)
 BINARY=ancest
-OBJS=main.o
+OBJS=jobqueue.o main.o
+DEPS=libm3/lib/libm3.a
 
-$(BINARY): $(OBJS)
-	$(CC) $(LDFLAGS) -o $(BINARY) $(OBJS)
+$(BINARY): $(OBJS) $(DEPS)
+	@ctags -R *
+	$(CC) -o $(BINARY) $(OBJS) $(LDFLAGS)
 
 -include *.d
 
-.PHONY: clean
+.PHONY: clean depclean
 
 clean: 
 	rm -f $(BINARY) $(OBJS) $(OBJS:%.o=%.d)
+
+depclean: clean
+	@make -C libm3 clean
+
+libm3/lib/libm3.a:
+	@make -C libm3

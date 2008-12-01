@@ -4,6 +4,8 @@
 
 #include <assert.h>
 
+#include "jobqueue.h"
+
 size_t header_func(void* ptr, size_t size, size_t nmemb, void* stream) {
 	(void)stream;
 
