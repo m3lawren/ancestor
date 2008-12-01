@@ -26,7 +26,7 @@ struct job* job_request_create(unsigned int id) {
 	return j;
 }
 
-struct job* job_request_run(struct job* j) {
+void job_request_run(struct job* j, struct batch* b) {
 	(void)j;
-	return NULL;
+	(void)b;
 }

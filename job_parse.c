@@ -34,7 +34,7 @@ struct job* job_parse_create(const char* file) {
 	return j;
 }
 
-struct job* job_parse_run(struct job* j) {
+void job_parse_run(struct job* j, struct batch* b) {
 	(void)j;
-	return NULL;
+	(void)b;
 }
