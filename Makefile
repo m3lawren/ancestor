@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -W -Wall -Werror -ansi -pedantic -MMD -Ilibm3/include
+CFLAGS=-g -W -Wall -Werror -ansi -pedantic -std=c99 -MMD -Ilibm3/include
 LDLIBS=-lcurl -lpthread -lm3 
 LDFLAGS=-Llibm3/lib/ $(LDLIBS)
 BINARY=ancest
