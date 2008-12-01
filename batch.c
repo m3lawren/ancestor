@@ -15,6 +15,7 @@ struct batch {
 	struct queue*   b_queue;
 	unsigned int    b_num_refs;
 	unsigned int    b_num_jobs;
+	unsigned int    b_job_idx;
 };
 
 /*****************************************************************************/
@@ -28,7 +29,7 @@ struct batch* batch_create(const char* name) {
 
 	b->b_name = NULL;
 	b->b_queue = NULL;
-	b->b_num_refs = b->b_num_jobs = 0;
+	b->b_num_refs = b->b_num_jobs = b->b_job_idx = 0;
 
 	if (!(b->b_name = malloc(strlen(name) + 1))) {
 		goto failure;
@@ -123,10 +124,12 @@ int batch_add_job(struct batch* b, struct job* j) {
 
 	assert(b);
 	assert(j);
+	assert(j->j_id == 0);
 
 	assert(0 == pthread_mutex_lock(&b->b_mutex));
 	if (!(ret = queue_push(b->b_queue, j))) {
 		b->b_num_jobs++;
+		j->j_id = b->b_job_idx++;
 	}
 	pthread_cond_broadcast(&b->b_job_cv);
 	assert(0 == pthread_mutex_unlock(&b->b_mutex));

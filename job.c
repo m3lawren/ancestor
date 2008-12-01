@@ -12,6 +12,7 @@ struct job* job_create(enum job_type type) {
 	j->j_type = type;
 	j->j_state = JS_PENDING;
 	j->j_data = NULL;
+	j->j_id = 0;
 
 	return j;
 }

@@ -16,6 +16,7 @@ struct job {
 	enum job_type           j_type;
 	enum job_state volatile j_state;
 	void*                   j_data;
+	unsigned int            j_id;
 };
 
 struct job* job_create(enum job_type);
