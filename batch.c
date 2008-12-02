@@ -68,7 +68,7 @@ failure:
 		free(b->b_name);
 	}
 	if (b->b_queue) {
-		queue_destroy(b->b_queue);
+		assert(0 == queue_destroy(b->b_queue));
 	}
 	pthread_mutex_destroy(&b->b_mutex);
 	pthread_cond_destroy(&b->b_job_cv);
@@ -89,7 +89,7 @@ static void _batch_destroy(struct batch* b) {
 	}
 
 	if (b->b_queue) {
-		queue_destroy(b->b_queue);
+		assert(0 == queue_destroy(b->b_queue));
 	}
 
 	pthread_mutex_destroy(&b->b_mutex);
@@ -175,7 +175,7 @@ struct job* batch_next_job(struct batch* b) {
 		LOG(LL_DEBUG, "no jobs, waiting");
 		pthread_cond_wait(&b->b_job_cv, &b->b_mutex);
 	}
-	ret = queue_pop(b->b_queue);
+	assert(0 == queue_pop(b->b_queue, (void**)&ret));
 	b->b_num_jobs--;
 	LOG(LL_DEBUG, "got job %d, %d remaining", ret->j_id, b->b_num_jobs);
 	assert(0 == pthread_mutex_unlock(&b->b_mutex));
