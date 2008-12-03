@@ -5,8 +5,7 @@ struct batch;
 struct job;
 
 struct batch* batch_create(const char*);
-int           batch_incref(struct batch*);
-int           batch_decref(struct batch*);
+void          batch_destroy(struct batch*);
 
 const char*   batch_name(const struct batch*);
 int           batch_add_job(struct batch*, struct job*);

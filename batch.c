@@ -17,41 +17,9 @@ struct batch {
 	pthread_cond_t  b_job_cv;
 	char*           b_name;
 	struct queue*   b_queue;
-	unsigned int    b_num_refs;
 	unsigned int    b_num_jobs;
 	unsigned int    b_job_idx;
 };
-
-/*****************************************************************************/
-static void _batch_destroy(struct batch* b) {
-	int result;
-
-	if (!b) {
-		LOG(LL_WARN, "tried to destroy null batch");
-		return;
-	}
-
-	LOG(LL_DEBUG, "destroying batch '%s'", b->b_name);
-
-	if (b->b_num_refs > 0) {
-		LOG(LL_WARN, "'%s' has %d refs", b->b_num_refs);
-	}
-	
-	if (b->b_name) {
-		free(b->b_name);
-	}
-
-	if (b->b_queue) {
-		if ((result = queue_destroy(b->b_queue))) {
-			LOG(LL_WARN, "queue_destroy: %s", strerror(result));
-		}
-	}
-
-	pthread_mutex_destroy(&b->b_mutex);
-	pthread_cond_destroy(&b->b_job_cv);
-
-	free(b);
-}
 
 /*****************************************************************************/
 struct batch* batch_create(const char* name) {
@@ -87,62 +55,38 @@ struct batch* batch_create(const char* name) {
 		goto failure;
 	}
 
-	if ((result = batch_incref(b))) {
-		LOG(LL_ERROR, "batch_incref: %s", strerror(result));
-		goto failure;
-	}
-
 	return b;
 
 failure:
-	_batch_destroy(b);
+	batch_destroy(b);
 	return NULL;
 }
 
 /*****************************************************************************/
-int batch_incref(struct batch* b) {
+void batch_destroy(struct batch* b) {
 	int result;
 
 	if (!b) {
-		LOG(LL_ERROR, "null batch");
-		return EINVAL;
+		LOG(LL_WARN, "tried to destroy null batch");
+		return;
 	}
 
-	CHECK_LOCK(b->b_mutex);
+	LOG(LL_DEBUG, "destroying batch '%s'", b->b_name);
 
-	b->b_num_refs++;
-	LOG(LL_DEBUG, "'%s' has %d refs", b->b_name, b->b_num_refs);
-
-	CHECK_UNLOCK(b->b_mutex);
-
-	return 0;
-}
-
-/*****************************************************************************/
-int batch_decref(struct batch* b) {
-	int can_delete = 0;
-	int result;
-
-	if (!b) {
-		LOG(LL_ERROR, "null batch");
-		return EINVAL;
+	if (b->b_name) {
+		free(b->b_name);
 	}
 
-	CHECK_LOCK(b->b_mutex);
-
-	b->b_num_refs--;
-	LOG(LL_DEBUG, "'%s' has %d refs", b->b_name, b->b_num_refs);
-	if (!b->b_num_refs) {
-		can_delete = 1;
+	if (b->b_queue) {
+		if ((result = queue_destroy(b->b_queue))) {
+			LOG(LL_WARN, "queue_destroy: %s", strerror(result));
+		}
 	}
 
-	CHECK_UNLOCK(b->b_mutex);
+	pthread_mutex_destroy(&b->b_mutex);
+	pthread_cond_destroy(&b->b_job_cv);
 
-	if (can_delete) {
-		_batch_destroy(b);
-	}
-
-	return 0;
+	free(b);
 }
 
 /*****************************************************************************/

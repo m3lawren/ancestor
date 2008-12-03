@@ -48,14 +48,26 @@ failure:
 
 /*****************************************************************************/
 int dispatcher_destroy(struct dispatcher* d) {
+	int result;
+	unsigned int i;
+
 	CHECK_NULL(d);
 
 	if (d->d_name) {
 		free(d->d_name);
 	}
 	if (d->d_batches) {
+		struct batch* b;
+		for (i = 0; i < array_size(d->d_batches); i++) {
+			if ((result = array_get(d->d_batches, i, (void**)&b))) {
+				LOG(LL_WARN, "array_get: %s", strerror(result));
+			} else {
+				batch_destroy(b);
+			}
+		}
 		array_destroy(d->d_batches);
 	}
+	free(d);
 
 	return 0;
 }

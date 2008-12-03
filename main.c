@@ -30,14 +30,14 @@ int main(void) {
 	if ((result = batch_add_job(b, job_dummy_create()))) {
 		LOG(LL_ERROR, "batch_add_job: %s", strerror(result));
 		dispatcher_destroy(d);
-		batch_decref(b);	
+		batch_destroy(b);	
 		return EXIT_FAILURE;
 	}
 
 	if ((result = dispatcher_add_batch(d, b))) {
 		LOG(LL_ERROR, "dispatcher_add_batch: %s", strerror(result));
 		dispatcher_destroy(d);
-		batch_decref(b);
+		batch_destroy(b);
 		return EXIT_FAILURE;
 	}
 
