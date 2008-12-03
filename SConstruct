@@ -7,6 +7,7 @@ srcs = [
 	'batch.c',
 	'dispatcher.c',
 	'job.c',
+	'job_dummy.c',
 	'log.c',
 	'main.c',
 ]

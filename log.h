@@ -6,6 +6,7 @@
 #define LT_JOB        0x04
 #define LT_BATCH      0x08
 #define LT_DISPATCHER 0x10
+#define LT_JOB_DUMMY  0x20
 
 #define LT_NONE   0x0
 #define LT_ALL    0xffffffff
