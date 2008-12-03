@@ -17,6 +17,5 @@ env.Program('ancestor', srcs, LIBS=['m3', 'pthread']);
 
 Default('ancestor')
 
-ctags = Command('tags', 'ancestor', 'ctags -R *')
-NoClean(ctags)
-Default(ctags)
+import os
+os.system('ctags -R *')
