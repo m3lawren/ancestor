@@ -1,9 +1,14 @@
 #include "dispatcher.h"
 
+#include "batch.h"
+#include "log.h"
+
 #include <array.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define LOG_TYPE LT_DISPATCHER
 
 struct dispatcher {
 	char*         d_name;
@@ -16,16 +21,19 @@ struct dispatcher* dispatcher_create(const char* name) {
 	struct dispatcher* d;
 
 	if (!(d = calloc(1, sizeof(struct dispatcher)))) {
+		LOG(LL_ERROR, "unable to allocate space for struct");
 		goto failure;
 	}
 
 	if (!(d->d_name = malloc(strlen(name) + 1))) {
+		LOG(LL_ERROR, "unable to allocate space for name");
 		goto failure;
 	}
 
 	strcpy(d->d_name, name);
 
 	if (!(d->d_batches = array_create())) {
+		LOG(LL_ERROR, "unable to allocate space for batches");
 		goto failure;
 	}
 
@@ -40,6 +48,7 @@ failure:
 /*****************************************************************************/
 int dispatcher_destroy(struct dispatcher* d) {
 	if (!d) {
+		LOG(LL_ERROR, "null dispatcher");
 		return EINVAL;
 	}
 
@@ -65,12 +74,16 @@ int dispatcher_run(struct dispatcher* d) {
 /*****************************************************************************/
 int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 	if (!d) {
+		LOG(LL_ERROR, "null dispatcher");
 		return EINVAL;
 	}
 
 	if (!b) {
+		LOG(LL_ERROR, "null batch");
 		return EINVAL;
 	}
+
+	LOG(LL_DEBUG, "adding batch %s to dispatcher %s", batch_name(b), d->d_name);
 
 	return array_append(d->d_batches, b);
 }
@@ -78,10 +91,12 @@ int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 /*****************************************************************************/
 int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 	if (!d) {
+		LOG(LL_ERROR, "null dispatcher");
 		return EINVAL;
 	}
 
 	if (n == 0 || n > DISPATCHER_WORKERS_MAX) {
+		LOG(LL_ERROR, "invalid number of workers");
 		return EINVAL;
 	}
 	
