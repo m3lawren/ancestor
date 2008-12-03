@@ -6,11 +6,8 @@ env = Environment(CPPPATH=include, LIBPATH=lib, CCFLAGS='-g -W -Wall -Werror -pe
 srcs = [
 	'batch.c',
 	'job.c',
-	'job_parse.c',
-	'job_request.c',
 	'log.c',
 	'main.c',
-	'runner.c',
 ]
 
 SConscript(['libm3/SConscript'])
