@@ -31,6 +31,7 @@ struct dispatcher* dispatcher_create(const char* name) {
 
 	d->d_num_workers = DISPATCHER_WORKERS;
 
+	return d;
 failure:
 	dispatcher_destroy(d);
 	return NULL;
