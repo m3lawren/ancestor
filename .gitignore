@@ -4,3 +4,4 @@ tags
 .*.sw*
 ancestor
 .sconsign*
+tags

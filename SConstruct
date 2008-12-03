@@ -16,3 +16,7 @@ SConscript(['libm3/SConscript'])
 env.Program('ancestor', srcs, LIBS=['m3', 'pthread']);
 
 Default('ancestor')
+
+ctags = Command('tags', 'ancestor', 'ctags -R *')
+NoClean(ctags)
+Default(ctags)
