@@ -5,6 +5,7 @@ env = Environment(CPPPATH=include, LIBPATH=lib, CCFLAGS='-g -W -Wall -Werror -pe
 
 srcs = [
 	'batch.c',
+	'dispatcher.c',
 	'job.c',
 	'log.c',
 	'main.c',
