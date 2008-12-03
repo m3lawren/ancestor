@@ -19,7 +19,7 @@ const char* job_type_string(enum job_type type) {
 }
 
 struct job* job_create(enum job_type type) {
-	struct job* j = malloc(sizeof(struct job));
+	struct job* j = calloc(sizeof(struct job));
 
 	LOG(LL_DEBUG, "creating new job with type %s", job_type_string(type));
 
@@ -30,8 +30,6 @@ struct job* job_create(enum job_type type) {
 
 	j->j_type = type;
 	j->j_state = JS_PENDING;
-	j->j_data = NULL;
-	j->j_id = 0;
 
 	return j;
 }

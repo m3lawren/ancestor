@@ -23,7 +23,7 @@ struct batch {
 
 /*****************************************************************************/
 struct batch* batch_create(const char* name) {
-	struct batch* b = malloc(sizeof(struct batch));
+	struct batch* b = calloc(sizeof(struct batch));
 	int result = 0;
 
 	LOG(LL_DEBUG, "creating new batch '%s'", name);
@@ -32,10 +32,6 @@ struct batch* batch_create(const char* name) {
 		LOG(LL_ERROR, "unable to allocate space for struct batch");
 		return NULL;
 	}
-
-	b->b_name = NULL;
-	b->b_queue = NULL;
-	b->b_num_refs = b->b_num_jobs = b->b_job_idx = 0;
 
 	if (!(b->b_name = malloc(strlen(name) + 1))) {
 		LOG(LL_ERROR, "unable to allocate space for b_name");
