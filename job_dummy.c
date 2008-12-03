@@ -51,7 +51,7 @@ static int dummy_check_init() {
 struct job* job_dummy_create() {
 	struct job* j;
 
-	if (!dummy_check_init()) {
+	if (dummy_check_init()) {
 		LOG(LL_ERROR, "type not initialized, cannot create new job");
 		return NULL;
 	}
