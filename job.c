@@ -3,6 +3,7 @@
 #include "log.h"
 
 #include <errno.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,7 +19,8 @@ struct job_type_info {
 };
 
 static struct job_type_info job_types[32];
-static int job_type_num = 0;
+static int                  job_type_num = 0;
+static pthread_mutex_t      job_type_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*****************************************************************************/
 struct job* job_create(job_type type) {
@@ -79,26 +81,45 @@ int job_run(struct job* j) {
 
 /*****************************************************************************/
 job_type job_register_type(const char* name, job_runner runner, job_destroyer destroyer) {
+	int result;
+	job_type ret;
+
+	if ((result = pthread_mutex_lock(&job_type_mutex))) {
+		LOG(LL_ERROR, "pthread_mutex_lock: %s", strerror(result));
+		return -1;
+	}
+
 	if (job_type_num == JOB_TYPE_MAX) {
 		LOG(LL_ERROR, "ran out of job type slots");
-		return -1;
+		goto failure;
 	}
 
 	if (strlen(name) >= JOB_TYPE_NAME_MAX - 1) {
 		LOG(LL_ERROR, "job name too long: %s", name);
-		return -1;
+		goto failure;
 	}
 
 	if (runner == NULL || destroyer == NULL) {
 		LOG(LL_ERROR, "null destroyer or runner encountered on type %s", name);
+		goto failure;
+	}
+
+	ret = job_type_num++;
+	strcpy(job_types[ret].jt_name, name);
+	job_types[ret].jt_runner = runner;
+	job_types[ret].jt_destroyer = destroyer;
+
+	if ((result = pthread_mutex_unlock(&job_type_mutex))) {
+		LOG(LL_ERROR, "pthread_mutex_unlock: %s", strerror(result));
+		job_type_num--;
 		return -1;
 	}
 
-	strcpy(job_types[job_type_num].jt_name, name);
-	job_types[job_type_num].jt_runner = runner;
-	job_types[job_type_num].jt_destroyer = destroyer;
+	return ret;
 
-	return job_type_num++;
+failure:
+	pthread_mutex_unlock(&job_type_mutex);
+	return -1;
 }
 
 /*****************************************************************************/

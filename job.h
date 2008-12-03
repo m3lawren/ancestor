@@ -25,7 +25,7 @@ int         job_run(struct job*);
 typedef int (*job_runner)(struct job*);
 typedef void (*job_destroyer)(struct job*);
 
-job_type job_register_type(const char*, job_runner, job_destroyer);
+job_type   job_register_type(const char*, job_runner, job_destroyer);
 
 const char* job_type_name(job_type);
 
