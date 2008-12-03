@@ -11,5 +11,4 @@
 #define CHECK_COND(cond) if (!(cond)) { LOG(LL_ERROR, "condition failed: " #cond); return EINVAL; }
 #define CHECK_NULL(var) CHECK_COND((var) != NULL)
 
-
 #endif
