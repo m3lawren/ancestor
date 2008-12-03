@@ -8,8 +8,10 @@
 struct dispatcher {
 	char*         d_name;
 	struct array* d_batches;
+	unsigned int  d_num_workers;
 };
 
+/*****************************************************************************/
 struct dispatcher* dispatcher_create(const char* name) {
 	struct dispatcher* d;
 
@@ -27,11 +29,14 @@ struct dispatcher* dispatcher_create(const char* name) {
 		goto failure;
 	}
 
+	d->d_num_workers = DISPATCHER_WORKERS;
+
 failure:
 	dispatcher_destroy(d);
 	return NULL;
 }
 
+/*****************************************************************************/
 int dispatcher_destroy(struct dispatcher* d) {
 	if (!d) {
 		return EINVAL;
@@ -47,6 +52,7 @@ int dispatcher_destroy(struct dispatcher* d) {
 	return 0;
 }
 
+/*****************************************************************************/
 int dispatcher_run(struct dispatcher* d) {
 	if (!d) {
 		return EINVAL;
@@ -55,6 +61,7 @@ int dispatcher_run(struct dispatcher* d) {
 	return ENOTSUP;
 }
 
+/*****************************************************************************/
 int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 	if (!d) {
 		return EINVAL;
@@ -65,4 +72,19 @@ int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 	}
 
 	return array_append(d->d_batches, b);
+}
+
+/*****************************************************************************/
+int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
+	if (!d) {
+		return EINVAL;
+	}
+
+	if (n == 0 || n > DISPATCHER_WORKERS_MAX) {
+		return EINVAL;
+	}
+	
+	d->d_num_workers = n;
+
+	return 0;
 }
