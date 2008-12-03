@@ -157,7 +157,7 @@ int batch_add_job(struct batch* b, struct job* j) {
 
 	CHECK_NULL(b);
 	CHECK_NULL(j);
-	CHECK_COND(j->j_id != 0);
+	CHECK_COND(j->j_id == 0);
 
 	LOG(LL_DEBUG, "adding a job to batch %s", b->b_name);
 
