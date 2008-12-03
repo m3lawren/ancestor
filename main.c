@@ -16,8 +16,16 @@ int main(void) {
 	log_init(stderr);
 
 	LOG(LL_DEBUG, "initializing objects");
-	d = dispatcher_create("dtest");
-	b = batch_create("btest");
+
+	if (!(d = dispatcher_create("dtest"))) {
+		LOG(LL_ERROR, "dispatcher_create returned null");
+		return EXIT_FAILURE;
+	}
+	
+	if (!(b = batch_create("btest"))) {
+		LOG(LL_ERROR, "batch_create returned null");
+		return EXIT_FAILURE;
+	}
 
 	if ((result = batch_add_job(b, job_dummy_create()))) {
 		LOG(LL_ERROR, "batch_add_job: %s", strerror(result));
