@@ -15,7 +15,8 @@
 enum loglevel {
 	LL_ERROR = 0,
 	LL_INFO  = 1,
-	LL_DEBUG = 2
+	LL_WARN  = 2,
+	LL_DEBUG = 3
 };
 
 int  log_init(FILE* stream);
