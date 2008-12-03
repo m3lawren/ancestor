@@ -2,4 +2,5 @@
 *.o
 tags
 .*.sw*
-ancest
+ancestor
+.sconsign*
