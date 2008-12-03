@@ -1,6 +1,7 @@
 #include "dispatcher.h"
 
 #include "batch.h"
+#include "common.h"
 #include "log.h"
 
 #include <array.h>
@@ -47,10 +48,7 @@ failure:
 
 /*****************************************************************************/
 int dispatcher_destroy(struct dispatcher* d) {
-	if (!d) {
-		LOG(LL_ERROR, "null dispatcher");
-		return EINVAL;
-	}
+	CHECK_NULL(d);
 
 	if (d->d_name) {
 		free(d->d_name);
@@ -64,24 +62,15 @@ int dispatcher_destroy(struct dispatcher* d) {
 
 /*****************************************************************************/
 int dispatcher_run(struct dispatcher* d) {
-	if (!d) {
-		return EINVAL;
-	}
+	CHECK_NULL(d);
 
 	return ENOTSUP;
 }
 
 /*****************************************************************************/
 int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
-	if (!d) {
-		LOG(LL_ERROR, "null dispatcher");
-		return EINVAL;
-	}
-
-	if (!b) {
-		LOG(LL_ERROR, "null batch");
-		return EINVAL;
-	}
+	CHECK_NULL(d);
+	CHECK_NULL(b);
 
 	LOG(LL_DEBUG, "adding batch %s to dispatcher %s", batch_name(b), d->d_name);
 
@@ -90,15 +79,8 @@ int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 
 /*****************************************************************************/
 int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
-	if (!d) {
-		LOG(LL_ERROR, "null dispatcher");
-		return EINVAL;
-	}
-
-	if (n == 0 || n > DISPATCHER_WORKERS_MAX) {
-		LOG(LL_ERROR, "invalid number of workers");
-		return EINVAL;
-	}
+	CHECK_NULL(d);
+	CHECK_COND(n > 0 && n <= DISPATCHER_WORKERS_MAX);
 	
 	d->d_num_workers = n;
 
