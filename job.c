@@ -19,7 +19,7 @@ struct job_type_info {
 };
 
 static struct job_type_info job_types[32];
-static int                  job_type_num = 0;
+static int volatile         job_type_num = 0;
 static pthread_mutex_t      job_type_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*****************************************************************************/
