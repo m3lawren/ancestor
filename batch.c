@@ -75,6 +75,7 @@ failure:
 /*****************************************************************************/
 static void _batch_destroy(struct batch* b) {
 	if (!b) {
+		LOG(LL_WARN, "tried to destroy null batch");
 		return;
 	}
 
