@@ -19,7 +19,7 @@ const char* job_type_string(enum job_type type) {
 }
 
 struct job* job_create(enum job_type type) {
-	struct job* j = calloc(sizeof(struct job));
+	struct job* j = calloc(1, sizeof(struct job));
 
 	LOG(LL_DEBUG, "creating new job with type %s", job_type_string(type));
 

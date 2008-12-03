@@ -23,7 +23,7 @@ struct batch {
 
 /*****************************************************************************/
 struct batch* batch_create(const char* name) {
-	struct batch* b = calloc(sizeof(struct batch));
+	struct batch* b = calloc(1, sizeof(struct batch));
 	int result = 0;
 
 	LOG(LL_DEBUG, "creating new batch '%s'", name);
