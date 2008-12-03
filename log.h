@@ -1,10 +1,11 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
-#define LT_MAIN   0x01
-#define LT_RUNNER 0x02
-#define LT_JOB    0x04
-#define LT_BATCH  0x08
+#define LT_MAIN       0x01
+#define LT_RUNNER     0x02
+#define LT_JOB        0x04
+#define LT_BATCH      0x08
+#define LT_DISPATCHER 0x10
 
 #define LT_NONE   0x0
 #define LT_ALL    0xffffffff
