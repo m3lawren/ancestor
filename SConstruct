@@ -10,6 +10,7 @@ srcs = [
 	'job_dummy.c',
 	'log.c',
 	'main.c',
+	'worker.c',
 ]
 
 SConscript(['libm3/SConscript'])
