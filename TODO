@@ -1,0 +1,1 @@
+ - check pthread_*_destroy calls
