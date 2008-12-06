@@ -1,5 +1,5 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef _CHECK_H_
+#define _CHECK_H_
 
 #include <pthread.h>
 #include <string.h>

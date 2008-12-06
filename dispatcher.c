@@ -1,7 +1,7 @@
 #include "dispatcher.h"
 
 #include "batch.h"
-#include "common.h"
+#include "check.h"
 #include "log.h"
 
 #include <array.h>

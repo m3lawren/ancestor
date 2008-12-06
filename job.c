@@ -1,6 +1,6 @@
 #include "job.h"
 
-#include "common.h"
+#include "check.h"
 #include "log.h"
 
 #include <errno.h>

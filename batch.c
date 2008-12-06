@@ -1,6 +1,6 @@
 #include "batch.h"
 
-#include "common.h"
+#include "check.h"
 #include "job.h"
 #include "log.h"
 

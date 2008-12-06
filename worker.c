@@ -1,6 +1,6 @@
 #include "worker.h"
 
-#include "common.h"
+#include "check.h"
 #include "log.h"
 
 #include <pthread.h>
