@@ -42,15 +42,8 @@ struct dispatcher* dispatcher_create(const char* name) {
 		goto failure;
 	}
 
-	if ((result = pthread_mutex_init(&d->d_mutex, NULL))) {
-		LOG(LL_ERROR, "pthread_mutex_init: %s", strerror(result));
-		goto failure;
-	}
-
-	if ((result = pthread_cond_init(&d->d_cv, NULL))) {
-		LOG(LL_ERROR, "pthread_cond_init: %s", strerror(result));
-		goto failure;
-	}
+	CHECK_LOCK_INIT(d->d_mutex);
+	CHECK_COND_INIT(d->d_cv);
 
 	d->d_num_workers = DISPATCHER_WORKERS;
 
@@ -65,7 +58,7 @@ int dispatcher_destroy(struct dispatcher* d) {
 	int result;
 	unsigned int i;
 
-	CHECK_NULL(d);
+	PRE(d != NULL);
 
 	if (d->d_name) {
 		free(d->d_name);
@@ -73,8 +66,8 @@ int dispatcher_destroy(struct dispatcher* d) {
 	if (d->d_batches) {
 		struct batch* b;
 		for (i = 0; i < array_size(d->d_batches); i++) {
-			if ((result = array_get(d->d_batches, i, (void**)&b))) {
-				LOG(LL_WARN, "array_get: %s", strerror(result));
+			CHECK_CALL(array_get(d->d_batches, i, (void**)&b)) {
+				LOG_CALL_WARN(array_get);
 			} else {
 				batch_destroy(b);
 			}
@@ -92,7 +85,7 @@ int dispatcher_destroy(struct dispatcher* d) {
 
 /*****************************************************************************/
 int dispatcher_run(struct dispatcher* d) {
-	CHECK_NULL(d);
+	PRE(d != NULL);
 
 	return ENOTSUP;
 }
@@ -101,8 +94,8 @@ int dispatcher_run(struct dispatcher* d) {
 int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 	int result;
 
-	CHECK_NULL(d);
-	CHECK_NULL(b);
+	PRE(d != NULL);
+	PRE(b != NULL);
 
 	LOG(LL_DEBUG, "adding batch %s to dispatcher %s", batch_name(b), d->d_name);
 
@@ -117,8 +110,8 @@ int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 	int result;
 
-	CHECK_NULL(d);
-	CHECK_COND(n > 0 && n <= DISPATCHER_WORKERS_MAX);
+	PRE(d != NULL);
+	PRE(n > 0 && n <= DISPATCHER_WORKERS_MAX);
 
 	CHECK_LOCK(d->d_mutex);
 	d->d_num_workers = n;

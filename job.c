@@ -1,5 +1,6 @@
 #include "job.h"
 
+#include "common.h"
 #include "log.h"
 
 #include <errno.h>
@@ -26,10 +27,7 @@ static pthread_mutex_t      job_type_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct job* job_create(job_type type) {
 	struct job* j;
 
-	if (type < 0 || type >= job_type_num) {
-		LOG(LL_ERROR, "tried to create job with unknown type %d", type);
-		return NULL;
-	}
+	PREN(type >= 0 && type < job_type_num);
 
 	LOG(LL_DEBUG, "creating new job with type %s (%d)", job_type_name(type), type);
 
@@ -46,10 +44,7 @@ struct job* job_create(job_type type) {
 
 /*****************************************************************************/
 void job_destroy(struct job* j) {
-	if (!j) {
-		LOG(LL_ERROR, "tried to destroy null job");
-		return;
-	}
+	PREV(j != NULL);
 
 	if (j->j_state != JS_COMPLETE) {
 		LOG(LL_WARN, "tried to destroy job in non-complete state");
@@ -64,15 +59,8 @@ void job_destroy(struct job* j) {
 
 /*****************************************************************************/
 int job_run(struct job* j) {
-	if (!j) {
-		LOG(LL_ERROR, "tried to run null job");
-		return EINVAL;
-	}
-
-	if (j->j_state != JS_PENDING) {
-		LOG(LL_ERROR, "tried to run job in non-pending state");
-		return EINVAL;
-	}
+	PRE(j != NULL);
+	PRE(j->j_state != JS_PENDING);
 
 	j->j_state = JS_RUNNING;
 	
@@ -80,52 +68,33 @@ int job_run(struct job* j) {
 }
 
 /*****************************************************************************/
-job_type job_register_type(const char* name, job_runner runner, job_destroyer destroyer) {
-	int result;
-	job_type ret;
+int job_register_type(const char* name, job_runner runner, job_destroyer destroyer, job_type* ret) {
+	int result, retval;
+	*ret = -1;
 
-	if ((result = pthread_mutex_lock(&job_type_mutex))) {
-		LOG(LL_ERROR, "pthread_mutex_lock: %s", strerror(result));
-		return -1;
-	}
+	CHECK_LOCK(job_type_mutex);
 
-	if (job_type_num == JOB_TYPE_MAX) {
-		LOG(LL_ERROR, "ran out of job type slots");
-		goto failure;
-	}
+	PREG(job_type_num < JOB_TYPE_MAX);
+	PREG(strlen(name) < JOB_TYPE_NAME_MAX - 1);
+	PREG(runner != NULL && destroyer != NULL);
 
-	if (strlen(name) >= JOB_TYPE_NAME_MAX - 1) {
-		LOG(LL_ERROR, "job name too long: %s", name);
-		goto failure;
-	}
+	*ret = job_type_num++;
+	strcpy(job_types[*ret].jt_name, name);
+	job_types[*ret].jt_runner = runner;
+	job_types[*ret].jt_destroyer = destroyer;
 
-	if (runner == NULL || destroyer == NULL) {
-		LOG(LL_ERROR, "null destroyer or runner encountered on type %s", name);
-		goto failure;
-	}
+	CHECK_UNLOCK(job_type_mutex);
 
-	ret = job_type_num++;
-	strcpy(job_types[ret].jt_name, name);
-	job_types[ret].jt_runner = runner;
-	job_types[ret].jt_destroyer = destroyer;
-
-	if ((result = pthread_mutex_unlock(&job_type_mutex))) {
-		LOG(LL_ERROR, "pthread_mutex_unlock: %s", strerror(result));
-		job_type_num--;
-		return -1;
-	}
-
-	return ret;
+	return 0;
 
 failure:
-	pthread_mutex_unlock(&job_type_mutex);
-	return -1;
+	CHECK_UNLOCK(job_type_mutex);
+
+	return retval;
 }
 
 /*****************************************************************************/
 const char* job_type_name(job_type jt) {
-	if (jt < 0 || jt >= job_type_num) {
-		return NULL;
-	}
+	PREN(jt >= 0 && jt < job_type_num);
 	return job_types[jt].jt_name;
 }

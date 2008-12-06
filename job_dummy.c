@@ -1,5 +1,6 @@
 #include "job_dummy.h"
 
+#include "common.h"
 #include "job.h"
 #include "log.h"
 
@@ -22,30 +23,22 @@ static void dummy_destroyer(struct job* j) {
 
 static int dummy_check_init() {
 	int result;
-	int ret = 0;
 
-	if ((result = pthread_mutex_lock(&dummy_lock))) {
-		LOG(LL_ERROR, "pthread_mutex_lock: %s", strerror(result));
-		return result;
-	}
+	CHECK_LOCK(dummy_lock);
 
 	if (dummy_type < 0) {
 		LOG(LL_DEBUG, "trying to initialize type");
 
-		if ((dummy_type = job_register_type("dummy", dummy_runner, dummy_destroyer)) < 0) {
+		CHECK_CALL(job_register_type("dummy", dummy_runner, dummy_destroyer, &dummy_type)) {
 			LOG(LL_ERROR, "unable to register type");
-			ret = -1;
 		} else {
 			LOG(LL_DEBUG, "initialized with type %d", dummy_type);
 		}
 	}
 
-	if ((result = pthread_mutex_unlock(&dummy_lock))) {
-		LOG(LL_ERROR, "pthread_mutex_unlock: %s", strerror(result));
-		return result;
-	}
+	CHECK_UNLOCK(dummy_lock);
 
-	return ret;
+	return result;
 }
 
 struct job* job_dummy_create() {

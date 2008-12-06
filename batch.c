@@ -44,16 +44,9 @@ struct batch* batch_create(const char* name) {
 		LOG(LL_ERROR, "unable to create b_queue");
 		goto failure;
 	}
-
-	if ((result = pthread_mutex_init(&b->b_mutex, NULL))) {
-		LOG(LL_ERROR, "pthread_mutex_init: %s", strerror(result));
-		goto failure;
-	}
-
-	if ((result = pthread_cond_init(&b->b_job_cv, NULL))) {
-		LOG(LL_ERROR, "pthread_cond_init: %s", strerror(result));
-		goto failure;
-	}
+	
+	CHECK_LOCK_INIT(b->b_mutex);
+	CHECK_COND_INIT(b->b_job_cv);
 
 	return b;
 
@@ -99,9 +92,9 @@ int batch_add_job(struct batch* b, struct job* j) {
 	int ret;
 	int result;
 
-	CHECK_NULL(b);
-	CHECK_NULL(j);
-	CHECK_COND(j->j_id == 0);
+	PRE(b != NULL);
+	PRE(j != NULL);
+	PRE(j->j_id == 0);
 
 	LOG(LL_DEBUG, "adding a job to batch %s", b->b_name);
 
@@ -139,7 +132,7 @@ struct job* batch_next_job(struct batch* b) {
 		return NULL;
 	}
 
-	CHECK_LOCK_GOTO(b->b_mutex);
+	CHECK_AND_NULL(pthread_mutex_lock(&b->b_mutex));
 
 	while (b->b_num_jobs == 0) {
 		LOG(LL_DEBUG, "no jobs, waiting");
@@ -153,9 +146,7 @@ struct job* batch_next_job(struct batch* b) {
 		LOG(LL_DEBUG, "got job %d, %d remaining", ret->j_id, b->b_num_jobs);
 	}
 
-	CHECK_UNLOCK_GOTO(b->b_mutex);
+	CHECK_AND_NULL(pthread_mutex_unlock(&b->b_mutex));
 
 	return ret;
-failure:
-	return NULL;
 }
