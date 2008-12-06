@@ -6,6 +6,7 @@ struct worker;
 enum worker_state {
 	WS_WAITING,
 	WS_PROCESSING,
+	WS_SHUTDOWN,
 };
 
 struct worker*    worker_create();

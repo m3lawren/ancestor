@@ -30,6 +30,7 @@ int worker_impl(struct worker* w) {
 	while (w->w_shutdown == 0) {
 		pthread_cond_wait(&w->w_cv, &w->w_mutex);
 	}
+	w->w_state = WS_SHUTDOWN;
 	CHECK_UNLOCK(w->w_mutex);
 
 	return 0;
