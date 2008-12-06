@@ -1,6 +1,7 @@
 #ifndef _CHECK_H_
 #define _CHECK_H_
 
+#include <errno.h>
 #include <pthread.h>
 #include <string.h>
 
