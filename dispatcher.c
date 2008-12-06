@@ -18,6 +18,7 @@ struct dispatcher {
 	unsigned int    d_num_workers;
 	pthread_cond_t  d_cv;
 	pthread_mutex_t d_mutex;
+	struct worker** d_workers;
 };
 
 /*****************************************************************************/
@@ -25,10 +26,15 @@ struct dispatcher* dispatcher_create(const char* name) {
 	int result;
 	struct dispatcher* d;
 
-	if (!(d = calloc(1, sizeof(struct dispatcher)))) {
+	if (!(d = malloc(sizeof(struct dispatcher)))) {
 		LOG(LL_ERROR, "unable to allocate space for struct");
 		goto failure;
 	}
+
+	d->d_name = NULL;
+	d->d_batches = NULL;
+	d->d_num_workers = DISPATCHER_WORKERS;
+	d->d_workers = NULL;
 
 	if (!(d->d_name = malloc(strlen(name) + 1))) {
 		LOG(LL_ERROR, "unable to allocate space for name");
@@ -44,8 +50,6 @@ struct dispatcher* dispatcher_create(const char* name) {
 
 	CHECK_LOCK_INIT(d->d_mutex);
 	CHECK_COND_INIT(d->d_cv);
-
-	d->d_num_workers = DISPATCHER_WORKERS;
 
 	return d;
 failure:
@@ -73,6 +77,14 @@ int dispatcher_destroy(struct dispatcher* d) {
 			}
 		}
 		array_destroy(d->d_batches);
+	}
+	if (d->d_workers) {
+		for (i = 0; i < d->d_num_workers; i++) {
+			if (d->d_workers[i]) {
+				free(d->d_workers[i]);
+			}
+		}
+		free(d->d_workers);
 	}
 
 	pthread_cond_destroy(&d->d_cv);
