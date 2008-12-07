@@ -37,7 +37,7 @@ static int dummy_check_init() {
 
 	CHECK_UNLOCK(dummy_lock);
 
-	return result;
+	return 0;
 }
 
 struct job* job_dummy_create() {
