@@ -4,11 +4,13 @@
 enum job_state {
 	JS_PENDING,
 	JS_RUNNING,
-	JS_COMPLETE
+	JS_COMPLETE,
+	JS_ERROR,
 };
 
 typedef int job_type;
 
+/* TODO: need synchronization in here? */
 struct job {
 	job_type                j_type;
 	enum job_state volatile j_state;
