@@ -4,6 +4,7 @@
 struct worker;
 
 struct dispatcher;
+struct job;
 
 enum worker_state {
 	WS_WAITING,
@@ -15,6 +16,8 @@ enum worker_state {
 struct worker*    worker_create(struct dispatcher*);
 void              worker_destroy(struct worker*);
 int               worker_shutdown(struct worker*);
+
+int               worker_assign(struct worker*, struct job*);
 
 enum worker_state worker_state(struct worker*);
 struct job*       worker_job(struct worker*);

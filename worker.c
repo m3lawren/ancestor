@@ -58,6 +58,8 @@ int worker_impl(struct worker* w) {
 			CHECK_UNLOCK(w->w_mutex);
 			return result;
 		}
+		w->w_state = WS_WAITING;
+
 	}
 	w->w_state = WS_SHUTDOWN;
 	CHECK_UNLOCK(w->w_mutex);
@@ -124,6 +126,25 @@ int worker_shutdown(struct worker* w) {
 	return 0;
 }
 
+/*****************************************************************************/
+int worker_assign(struct worker* w, struct job* j) {
+	int result, retval;
+
+	PRE(w != NULL);
+	PRE(j != NULL);
+
+	CHECK_LOCK(w->w_mutex);
+
+	PREG(w->w_job == NULL);
+	PREG(w->w_state == WS_WAITING);
+
+	w->w_job = j;
+	pthread_cond_broadcast(&w->w_cv);
+
+failure:
+	CHECK_UNLOCK(w->w_mutex);
+	return retval;
+}
 
 /*****************************************************************************/
 enum worker_state worker_state(struct worker* w) {
