@@ -1,4 +1,5 @@
 #include "batch.h"
+#include "check.h"
 #include "dispatcher.h"
 #include "job_dummy.h"
 #include "log.h"
@@ -34,8 +35,9 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
-	if ((result = dispatcher_add_batch(d, b))) {
-		LOG(LL_ERROR, "dispatcher_add_batch: %s", strerror(result));
+	CHECK_LOGE(dispatcher_add_batch(d, b));
+	
+	if (result != 0) {
 		dispatcher_destroy(d);
 		batch_destroy(b);
 		return EXIT_FAILURE;
@@ -44,9 +46,9 @@ int main(void) {
 	LOG(LL_DEBUG, "done initializing objects");
 
 	LOG(LL_DEBUG, "starting dispatcher");
-	if ((result = dispatcher_run(d))) {
-		LOG(LL_ERROR, "dispatcher_run: %s", strerror(result));
-	} else {
+	CHECK_LOGE(dispatcher_run(d));
+
+	if (result == 0) {
 		LOG(LL_DEBUG, "dispatcher exited successfully");
 	}
 

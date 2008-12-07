@@ -23,7 +23,6 @@ struct dispatcher {
 
 /*****************************************************************************/
 struct dispatcher* dispatcher_create(const char* name) {
-	int result;
 	struct dispatcher* d;
 
 	if (!(d = malloc(sizeof(struct dispatcher)))) {
@@ -70,9 +69,8 @@ int dispatcher_destroy(struct dispatcher* d) {
 	if (d->d_batches) {
 		struct batch* b;
 		for (i = 0; i < array_size(d->d_batches); i++) {
-			CHECK_CALL(array_get(d->d_batches, i, (void**)&b)) {
-				LOG_CALL_WARN(array_get);
-			} else {
+			CHECK_LOGW(array_get(d->d_batches, i, (void**)&b))
+			if (!result) {
 				batch_destroy(b);
 			}
 		}
@@ -87,8 +85,8 @@ int dispatcher_destroy(struct dispatcher* d) {
 		free(d->d_workers);
 	}
 
-	pthread_cond_destroy(&d->d_cv);
-	pthread_mutex_destroy(&d->d_mutex);
+	CHECK_COND_DEST(d->d_cv);
+	CHECK_LOCK_DEST(d->d_mutex);
 
 	free(d);
 
@@ -104,7 +102,7 @@ int dispatcher_run(struct dispatcher* d) {
 
 /*****************************************************************************/
 int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
-	int result;
+	int retval = 0;
 
 	PRE(d != NULL);
 	PRE(b != NULL);
@@ -112,16 +110,16 @@ int dispatcher_add_batch(struct dispatcher* d, struct batch* b) {
 	LOG(LL_DEBUG, "adding batch %s to dispatcher %s", batch_name(b), d->d_name);
 
 	CHECK_LOCK(d->d_mutex);
-	result = array_append(d->d_batches, b);
+	CHECKF(array_append(d->d_batches, b));
+
+failure:
 	CHECK_UNLOCK(d->d_mutex);
 
-	return result;
+	return retval;
 }
 
 /*****************************************************************************/
 int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
-	int result;
-
 	PRE(d != NULL);
 	PRE(n > 0 && n <= DISPATCHER_WORKERS_MAX);
 
@@ -134,8 +132,6 @@ int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 
 /*****************************************************************************/
 int dispatcher_notify(struct dispatcher* d, struct worker* w) {
-	int result;
-
 	PRE(d != NULL);
 	PRE(w != NULL);
 

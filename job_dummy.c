@@ -29,9 +29,8 @@ static int dummy_check_init() {
 	if (dummy_type < 0) {
 		LOG(LL_DEBUG, "trying to initialize type");
 
-		CHECK_CALL(job_register_type("dummy", dummy_runner, dummy_destroyer, &dummy_type)) {
-			LOG(LL_ERROR, "unable to register type");
-		} else {
+		CHECK_LOGE(job_register_type("dummy", dummy_runner, dummy_destroyer, &dummy_type));
+		if (result == 0) {
 			LOG(LL_DEBUG, "initialized with type %d", dummy_type);
 		}
 	}
@@ -43,11 +42,9 @@ static int dummy_check_init() {
 
 struct job* job_dummy_create() {
 	struct job* j;
+	int result;
 
-	if (dummy_check_init()) {
-		LOG(LL_ERROR, "type not initialized, cannot create new job");
-		return NULL;
-	}
+	CHECK_LOGE(dummy_check_init());
 
 	j = job_create(dummy_type);	
 	j->j_data = NULL;

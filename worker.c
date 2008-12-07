@@ -44,15 +44,15 @@ int worker_impl(struct worker* w) {
 			break;
 		}
 
-		CHECK_CALL(job_run(w->w_job)) { 
-			LOG_CALL_WARN(job_run);
-		}
+		CHECK_LOGE(job_run(w->w_job));
 
 		if (w->w_job->j_state != JS_COMPLETE) {
 			w->w_job->j_state = JS_ERROR;
 		}
 
-		CHECK_CALL(dispatcher_notify(w->w_dispatcher, w)) {
+		CHECK_LOGE(dispatcher_notify(w->w_dispatcher, w));
+
+		if (result != 0) {
 			LOG_CALL_ERROR(dispatcher_notify);
 			w->w_state = WS_ERROR;
 			CHECK_UNLOCK(w->w_mutex);
@@ -76,7 +76,6 @@ static void* worker_thread(void* arg) {
 /******************************************************************************/
 struct worker* worker_create(struct dispatcher* d) {
 	struct worker* w = NULL;
-	int result;
 
 	w = malloc(sizeof(struct worker));
 	w->w_job = NULL;
@@ -114,8 +113,6 @@ void worker_destroy(struct worker* w) {
 
 /*****************************************************************************/
 int worker_shutdown(struct worker* w) {
-	int result;
-
 	PRE(w != NULL);
 
 	CHECK_LOCK(w->w_mutex);
@@ -128,7 +125,7 @@ int worker_shutdown(struct worker* w) {
 
 /*****************************************************************************/
 int worker_assign(struct worker* w, struct job* j) {
-	int result, retval;
+	int retval = 0;
 
 	PRE(w != NULL);
 	PRE(j != NULL);

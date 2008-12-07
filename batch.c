@@ -24,7 +24,6 @@ struct batch {
 /*****************************************************************************/
 struct batch* batch_create(const char* name) {
 	struct batch* b = calloc(1, sizeof(struct batch));
-	int result = 0;
 
 	LOG(LL_DEBUG, "creating new batch '%s'", name);
 
@@ -76,8 +75,8 @@ void batch_destroy(struct batch* b) {
 		}
 	}
 
-	pthread_mutex_destroy(&b->b_mutex);
-	pthread_cond_destroy(&b->b_job_cv);
+	CHECK_LOCK_DEST(b->b_mutex);
+	CHECK_COND_DEST(b->b_job_cv);
 
 	free(b);
 }
@@ -89,8 +88,7 @@ const char* batch_name(const struct batch* b) {
 
 /*****************************************************************************/
 int batch_add_job(struct batch* b, struct job* j) {
-	int ret;
-	int result;
+	int retval = 0;
 
 	PRE(b != NULL);
 	PRE(j != NULL);
@@ -100,18 +98,18 @@ int batch_add_job(struct batch* b, struct job* j) {
 
 	CHECK_LOCK(b->b_mutex);
 
-	if (!(ret = queue_push(b->b_queue, j))) {
-		b->b_num_jobs++;
-		j->j_id = b->b_job_idx++;
-		LOG(LL_DEBUG, "added job with id %d", j->j_id);
-	} else {
-		LOG(LL_ERROR, "unable to add job: %s", strerror(ret));
-	}
+	CHECKF(queue_push(b->b_queue, j));
+
+	b->b_num_jobs++;
+	j->j_id = b->b_job_idx++;
+	LOG(LL_DEBUG, "added job with id %d", j->j_id);
+
 	pthread_cond_broadcast(&b->b_job_cv);
 
+failure:
 	CHECK_UNLOCK(b->b_mutex);
 
-	return ret;
+	return retval;
 }
 
 /*****************************************************************************/
@@ -126,20 +124,20 @@ unsigned int batch_num_jobs(const struct batch* b) {
 struct job* batch_next_job(struct batch* b) {
 	struct job* ret;
 	int result;
+	
+	PREN(b != NULL);
 
-	if (!b) {
-		LOG(LL_ERROR, "null batch");
-		return NULL;
-	}
-
+	/* must use CHECKN because we return NULL instead of the result */
 	CHECKN(pthread_mutex_lock(&b->b_mutex));
 
 	while (b->b_num_jobs == 0) {
 		LOG(LL_DEBUG, "no jobs, waiting");
 		pthread_cond_wait(&b->b_job_cv, &b->b_mutex);
 	}
-	if ((result = queue_pop(b->b_queue, (void**)&ret))) {
-		LOG(LL_ERROR, "queue_pop: %s", strerror(result));
+
+	CHECK_LOGE(queue_pop(b->b_queue, (void**)&ret));
+
+	if (result != 0) {
 		ret = NULL;
 	} else {
 		b->b_num_jobs--;

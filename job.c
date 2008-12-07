@@ -45,10 +45,7 @@ struct job* job_create(job_type type) {
 /*****************************************************************************/
 void job_destroy(struct job* j) {
 	PREV(j != NULL);
-
-	if (j->j_state != JS_COMPLETE) {
-		LOG(LL_WARN, "tried to destroy job in non-complete state");
-	}
+	PREV(j->j_state == JS_COMPLETE);	
 
 	LOG(LL_DEBUG, "destroying job %d of type %s (%d)", j->j_id, job_type_name(j->j_type), j->j_type);
 
@@ -60,7 +57,7 @@ void job_destroy(struct job* j) {
 /*****************************************************************************/
 int job_run(struct job* j) {
 	PRE(j != NULL);
-	PRE(j->j_state != JS_PENDING);
+	PRE(j->j_state == JS_PENDING);
 
 	j->j_state = JS_RUNNING;
 	
@@ -69,7 +66,7 @@ int job_run(struct job* j) {
 
 /*****************************************************************************/
 int job_register_type(const char* name, job_runner runner, job_destroyer destroyer, job_type* ret) {
-	int result, retval;
+	int retval = 0;
 	*ret = -1;
 
 	CHECK_LOCK(job_type_mutex);
