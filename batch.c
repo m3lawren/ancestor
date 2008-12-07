@@ -132,7 +132,7 @@ struct job* batch_next_job(struct batch* b) {
 		return NULL;
 	}
 
-	CHECK_AND_NULL(pthread_mutex_lock(&b->b_mutex));
+	CHECKN(pthread_mutex_lock(&b->b_mutex));
 
 	while (b->b_num_jobs == 0) {
 		LOG(LL_DEBUG, "no jobs, waiting");
@@ -146,7 +146,7 @@ struct job* batch_next_job(struct batch* b) {
 		LOG(LL_DEBUG, "got job %d, %d remaining", ret->j_id, b->b_num_jobs);
 	}
 
-	CHECK_AND_NULL(pthread_mutex_unlock(&b->b_mutex));
+	CHECKN(pthread_mutex_unlock(&b->b_mutex));
 
 	return ret;
 }
