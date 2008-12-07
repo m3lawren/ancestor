@@ -131,3 +131,16 @@ int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 
 	return 0;
 }
+
+/*****************************************************************************/
+int dispatcher_notify(struct dispatcher* d, struct worker* w) {
+	int result;
+
+	PRE(d != NULL);
+	PRE(w != NULL);
+
+	CHECK_LOCK(d->d_mutex);
+	CHECK_UNLOCK(d->d_mutex);
+
+	return ENOTSUP;
+}
