@@ -1,7 +1,7 @@
 include = Dir('libm3/include')
 lib = Dir('libm3/lib')
 
-env = Environment(CPPPATH=include, LIBPATH=lib, CCFLAGS='-g -W -Wall -Werror -pedantic -std=c99')
+env = Environment(CPPPATH=include, LIBPATH=lib, CCFLAGS='-O2 -g -Wall -Wextra -Wunused -Werror -pedantic -std=c99')
 
 srcs = [
 	'batch.c',
