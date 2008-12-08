@@ -13,7 +13,7 @@ srcs = [
 	'worker.c',
 ]
 
-SConscript(['libm3/SConscript'])
+SConscript(['libm3/SConscript'], ['env'])
 
 env.Program('ancestor', srcs, LIBS=['m3', 'pthread']);
 
