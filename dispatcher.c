@@ -2,7 +2,9 @@
 
 #include "batch.h"
 #include "check.h"
+#include "job.h"
 #include "log.h"
+#include "worker.h"
 
 #include <array.h>
 #include <errno.h>
@@ -95,9 +97,22 @@ int dispatcher_destroy(struct dispatcher* d) {
 
 /*****************************************************************************/
 int dispatcher_run(struct dispatcher* d) {
+	struct worker* w;
+	struct batch* b;
+
 	PRE(d != NULL);
 
-	return ENOTSUP;
+	CHECK_LOCK(d->d_mutex);
+	w = worker_create(d);
+	array_get(d->d_batches, 0, (void**)&b);
+	worker_assign(w, batch_next_job(b));
+	CHECK_UNLOCK(d->d_mutex);
+	
+	worker_shutdown(w);
+	job_destroy(worker_job(w));
+	worker_destroy(w);
+
+	return 0;
 }
 
 /*****************************************************************************/

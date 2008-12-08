@@ -40,7 +40,7 @@ int worker_impl(struct worker* w) {
 			pthread_cond_wait(&w->w_cv, &w->w_mutex);
 		}
 
-		if (w->w_shutdown) {
+		if (w->w_shutdown && !w->w_job) {
 			break;
 		}
 
@@ -53,13 +53,12 @@ int worker_impl(struct worker* w) {
 		CHECK_LOGE(dispatcher_notify(w->w_dispatcher, w));
 
 		if (result != 0) {
-			LOG_CALL_ERROR(dispatcher_notify);
 			w->w_state = WS_ERROR;
 			CHECK_UNLOCK(w->w_mutex);
 			return result;
 		}
-		w->w_state = WS_WAITING;
 
+		w->w_state = WS_WAITING;
 	}
 	w->w_state = WS_SHUTDOWN;
 	CHECK_UNLOCK(w->w_mutex);
@@ -96,6 +95,8 @@ failure:
 
 /******************************************************************************/
 void worker_destroy(struct worker* w) {
+	int result;
+
 	if (!w) {
 		LOG(LL_WARN, "null worker");
 		return;
@@ -105,8 +106,12 @@ void worker_destroy(struct worker* w) {
 		LOG(LL_WARN, "non-null job");
 	}
 
-	pthread_mutex_destroy(&w->w_mutex);
-	pthread_cond_destroy(&w->w_cv);
+	if (w->w_state != WS_SHUTDOWN && w->w_state != WS_ERROR) {
+		LOG(LL_WARN, "not in WS_SHUTDOWN or WS_ERROR");
+	}
+
+	CHECK_LOCK_DEST(w->w_mutex);
+	CHECK_COND_DEST(w->w_cv);
 
 	free(w);
 }
@@ -119,6 +124,8 @@ int worker_shutdown(struct worker* w) {
 	w->w_shutdown = 1;
 	pthread_cond_broadcast(&w->w_cv);
 	CHECK_UNLOCK(w->w_mutex);
+
+	pthread_join(w->w_thread, NULL);
 
 	return 0;
 }
