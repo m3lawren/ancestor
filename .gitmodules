@@ -1,3 +1,3 @@
 [submodule "libm3"]
 	path = libm3
-	url = git://git.xsquared.ca/m3lawren/libm3.git
+	url = git://github.com/m3lawren/libm3.git
