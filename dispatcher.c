@@ -146,12 +146,16 @@ int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 
 /*****************************************************************************/
 int dispatcher_notify(struct dispatcher* d, struct worker* w, struct job* j) {
+	int result;
+
 	PRE(d != NULL);
 	PRE(w != NULL);
 	PRE(j != NULL);
+	PRE(j->j_state == JS_COMPLETE || j->j_state == JS_ERROR);
 
 	CHECK_LOCK(d->d_mutex);
+	CHECK_LOGW(job_destroy(j));
 	CHECK_UNLOCK(d->d_mutex);
 
-	return ENOTSUP;
+	return 0;
 }
