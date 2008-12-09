@@ -4,6 +4,7 @@
 struct dispatcher;
 
 struct batch;
+struct job;
 struct worker;
 
 #define DISPATCHER_WORKERS     5
@@ -31,6 +32,6 @@ int                dispatcher_run(struct dispatcher*);
 int                dispatcher_set_workers(struct dispatcher*, unsigned int);
 int                dispatcher_add_batch(struct dispatcher*, struct batch*);
 
-int                dispatcher_notify(struct dispatcher*, struct worker*);
+int                dispatcher_notify(struct dispatcher*, struct worker*, struct job*);
 
 #endif

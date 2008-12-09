@@ -34,9 +34,7 @@ int worker_impl(struct worker* w) {
 	CHECK_LOCK(w->w_mutex);
 	while (1) {
 		while (w->w_shutdown == 0 && 
-				(w->w_job == NULL || 
-				 w->w_job->j_state == JS_COMPLETE ||
-				 w->w_job->j_state == JS_ERROR)) {
+				w->w_job == NULL) {
 			pthread_cond_wait(&w->w_cv, &w->w_mutex);
 		}
 
@@ -50,7 +48,8 @@ int worker_impl(struct worker* w) {
 			w->w_job->j_state = JS_ERROR;
 		}
 
-		CHECK_LOGE(dispatcher_notify(w->w_dispatcher, w));
+		CHECK_LOGE(dispatcher_notify(w->w_dispatcher, w, w->w_job));
+		w->w_job = NULL;
 
 		if (result != 0) {
 			w->w_state = WS_ERROR;

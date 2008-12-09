@@ -109,7 +109,6 @@ int dispatcher_run(struct dispatcher* d) {
 	CHECK_UNLOCK(d->d_mutex);
 	
 	worker_shutdown(w);
-	job_destroy(worker_job(w));
 	worker_destroy(w);
 
 	return 0;
@@ -146,9 +145,10 @@ int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 }
 
 /*****************************************************************************/
-int dispatcher_notify(struct dispatcher* d, struct worker* w) {
+int dispatcher_notify(struct dispatcher* d, struct worker* w, struct job* j) {
 	PRE(d != NULL);
 	PRE(w != NULL);
+	PRE(j != NULL);
 
 	CHECK_LOCK(d->d_mutex);
 	CHECK_UNLOCK(d->d_mutex);
