@@ -19,13 +19,13 @@ struct job {
 };
 
 struct job* job_create(job_type);
-void        job_destroy(struct job*);
+int         job_destroy(struct job*);
 int         job_run(struct job*);
 
 /*****************************************************************************/
 
 typedef int (*job_runner)(struct job*);
-typedef void (*job_destroyer)(struct job*);
+typedef int (*job_destroyer)(struct job*);
 
 int job_register_type(const char*, job_runner, job_destroyer, job_type*);
 

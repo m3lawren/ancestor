@@ -17,8 +17,9 @@ static int dummy_runner(struct job* j) {
 	return 0;
 }
 
-static void dummy_destroyer(struct job* j) {
+static int dummy_destroyer(struct job* j) {
 	(void)j;
+	return 0;
 }
 
 static int dummy_check_init() {

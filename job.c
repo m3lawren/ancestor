@@ -43,15 +43,17 @@ struct job* job_create(job_type type) {
 }
 
 /*****************************************************************************/
-void job_destroy(struct job* j) {
-	PREV(j != NULL);
-	PREV(j->j_state == JS_COMPLETE);	
+int job_destroy(struct job* j) {
+	PRE(j != NULL);
+	PRE(j->j_state == JS_COMPLETE || j->j_state == JS_ERROR);	
 
 	LOG(LL_DEBUG, "destroying job %d of type %s (%d)", j->j_id, job_type_name(j->j_type), j->j_type);
 
-	job_types[j->j_type].jt_destroyer(j);
+	CHECK(job_types[j->j_type].jt_destroyer(j));
 
 	free(j);
+
+	return 0;
 }
 
 /*****************************************************************************/
