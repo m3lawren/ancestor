@@ -13,7 +13,7 @@
 #define _CHECK_AND(call, action) { int _result; _CHECK_LOG(call, LL_ERROR, _result); if (_result != 0) { action; } }
 #define CHECK(call) _CHECK_AND(call, return _result)
 #define CHECKN(call) _CHECK_AND(call, return NULL)
-#define CHECKF(call) _CHECK_AND(call, goto failure)
+#define CHECKF(call) _CHECK_AND(call, retval = _result; goto failure)
 
 #define _CHECK_LOG(call, type, var) if (((var) = (call))) { LOG(type, #call ": %s", strerror(var)); }
 #define CHECK_LOGW(call) _CHECK_LOG(call, LL_WARN, result)
@@ -27,8 +27,8 @@
 
 #define CHECK_LOCK(lock) CHECK(pthread_mutex_lock(&(lock)))
 #define CHECK_UNLOCK(lock) CHECK(pthread_mutex_unlock(&(lock)))
-#define CHECK_LOCK_INIT(lock) CHECKF(pthread_mutex_init(&(lock), NULL))
-#define CHECK_COND_INIT(cond) CHECKF(pthread_cond_init(&(cond), NULL))
+#define CHECK_LOCK_INIT(lock) { int retval; CHECKF(pthread_mutex_init(&(lock), NULL)) }
+#define CHECK_COND_INIT(cond) { int retval; CHECKF(pthread_cond_init(&(cond), NULL)) }
 #define CHECK_LOCK_DEST(lock) CHECK_LOGW(pthread_mutex_destroy(&(lock)))
 #define CHECK_COND_DEST(cond) CHECK_LOGW(pthread_cond_destroy(&(cond)))
 
