@@ -124,8 +124,6 @@ int worker_shutdown(struct worker* w) {
 	pthread_cond_broadcast(&w->w_cv);
 	CHECK_UNLOCK(w->w_mutex);
 
-	pthread_join(w->w_thread, NULL);
-
 	return 0;
 }
 
