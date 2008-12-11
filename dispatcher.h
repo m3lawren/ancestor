@@ -7,7 +7,7 @@ struct batch;
 struct job;
 struct worker;
 
-#define DISPATCHER_WORKERS     5
+#define DISPATCHER_WORKERS     1
 #define DISPATCHER_WORKERS_MAX 32
 
 /* Basic dispatcher functions:
@@ -27,6 +27,7 @@ struct worker;
  */
 struct dispatcher* dispatcher_create(const char* name);
 int                dispatcher_destroy(struct dispatcher*);
+int                dispatcher_shutdown(struct dispatcher*);
 
 int                dispatcher_run(struct dispatcher*);
 int                dispatcher_set_workers(struct dispatcher*, unsigned int);

@@ -9,6 +9,7 @@
 #include <array.h>
 #include <errno.h>
 #include <pthread.h>
+#include <queue.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,11 +17,16 @@
 
 struct dispatcher {
 	char*           d_name;
-	struct array*   d_batches;
-	unsigned int    d_num_workers;
+	
 	pthread_cond_t  d_cv;
 	pthread_mutex_t d_mutex;
+
+	struct array*   d_batches;
+
 	struct worker** d_workers;
+	unsigned int    d_num_workers;
+	struct queue*   d_free_workers;
+	unsigned int    d_num_free_workers;
 };
 
 /*****************************************************************************/
@@ -35,6 +41,7 @@ struct dispatcher* dispatcher_create(const char* name) {
 	d->d_name = NULL;
 	d->d_batches = NULL;
 	d->d_num_workers = DISPATCHER_WORKERS;
+	d->d_num_free_workers = 0;
 	d->d_workers = NULL;
 
 	if (!(d->d_name = malloc(strlen(name) + 1))) {
@@ -46,6 +53,11 @@ struct dispatcher* dispatcher_create(const char* name) {
 
 	if (!(d->d_batches = array_create())) {
 		LOG(LL_ERROR, "unable to allocate space for batches");
+		goto failure;
+	}
+
+	if (!(d->d_free_workers = queue_create())) {
+		LOG(LL_ERROR, "unable to allocate free workers list");
 		goto failure;
 	}
 
@@ -65,6 +77,9 @@ int dispatcher_destroy(struct dispatcher* d) {
 
 	PRE(d != NULL);
 
+	/* TODO: add proper shutdown logic to ensure all workers are stopped */
+	PRE(d->d_num_free_workers == d->d_num_workers);
+
 	if (d->d_name) {
 		free(d->d_name);
 	}
@@ -77,6 +92,9 @@ int dispatcher_destroy(struct dispatcher* d) {
 			}
 		}
 		array_destroy(d->d_batches);
+	}
+	if (d->d_free_workers) {
+		queue_destroy(d->d_free_workers);
 	}
 	if (d->d_workers) {
 		for (i = 0; i < d->d_num_workers; i++) {
@@ -93,6 +111,23 @@ int dispatcher_destroy(struct dispatcher* d) {
 	free(d);
 
 	return 0;
+}
+
+/*****************************************************************************/
+int dispatcher_shutdown(struct dispatcher* d) {
+	int retval = 0;
+	unsigned int i;
+	PRE(d != NULL);
+
+	CHECK_LOCK(d->d_mutex);
+	for (i = 0; i < d->d_num_workers; i++) {
+		CHECKF(worker_shutdown(d->d_workers[i]));
+	}
+
+failure:
+	CHECK_UNLOCK(d->d_mutex);
+
+	return retval;
 }
 
 /*****************************************************************************/
@@ -146,7 +181,7 @@ int dispatcher_set_workers(struct dispatcher* d, unsigned int n) {
 
 /*****************************************************************************/
 int dispatcher_notify(struct dispatcher* d, struct worker* w, struct job* j) {
-	int result;
+	int result, retval = 0;
 
 	PRE(d != NULL);
 	PRE(w != NULL);
@@ -154,8 +189,16 @@ int dispatcher_notify(struct dispatcher* d, struct worker* w, struct job* j) {
 	PRE(j->j_state == JS_COMPLETE || j->j_state == JS_ERROR);
 
 	CHECK_LOCK(d->d_mutex);
+
 	CHECK_LOGW(job_destroy(j));
+
+	CHECKF(queue_push(d->d_free_workers, w));
+	d->d_num_free_workers++;
+
+	pthread_cond_broadcast(&d->d_cv);
+
+failure:
 	CHECK_UNLOCK(d->d_mutex);
 
-	return 0;
+	return retval;
 }
