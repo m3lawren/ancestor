@@ -14,7 +14,7 @@ enum worker_state {
 };
 
 struct worker*    worker_create(struct dispatcher*);
-void              worker_destroy(struct worker*);
+int               worker_destroy(struct worker*);
 int               worker_shutdown(struct worker*);
 
 int               worker_assign(struct worker*, struct job*);

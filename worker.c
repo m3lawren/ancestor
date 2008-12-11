@@ -93,26 +93,33 @@ failure:
 }
 
 /******************************************************************************/
-void worker_destroy(struct worker* w) {
+int worker_destroy(struct worker* w) {
 	int result;
 
-	if (!w) {
-		LOG(LL_WARN, "null worker");
-		return;
-	}
+	PRE(w != NULL);
+
+	CHECK_LOCK(w->w_mutex);
 
 	if (w->w_job) {
 		LOG(LL_WARN, "non-null job");
 	}
 
 	if (w->w_state != WS_SHUTDOWN && w->w_state != WS_ERROR) {
-		LOG(LL_WARN, "not in WS_SHUTDOWN or WS_ERROR");
+		LOG(LL_WARN, "not in WS_SHUTDOWN or WS_ERROR, waiting for thread to join");
+		CHECK_UNLOCK(w->w_mutex);
+		worker_shutdown(w);
+	} else {
+		CHECK_UNLOCK(w->w_mutex);
 	}
+
+	pthread_join(w->w_thread, NULL);
 
 	CHECK_LOCK_DEST(w->w_mutex);
 	CHECK_COND_DEST(w->w_cv);
 
 	free(w);
+
+	return 0;
 }
 
 /*****************************************************************************/
